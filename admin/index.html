@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countdown Admin Panel</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #0d0e12;
+            color: #ffffff;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .admin-card {
+            background: #16181d;
+            border: 1px solid #24262f;
+            padding: 30px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        h2 { margin-bottom: 20px; font-size: 1.5rem; color: #4f46e5; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 0.85rem; color: #8a8f98; text-transform: uppercase; }
+        input[type="text"], input[type="datetime-local"], input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            background: #0d0e12;
+            border: 1px solid #24262f;
+            border-radius: 6px;
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        input:focus { border-color: #4f46e5; outline: none; }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover { background: #4338ca; }
+        .alert {
+            padding: 10px;
+            background: #10b981;
+            color: white;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: none;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        #login-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: #0d0e12; display: flex; justify-content: center; align-items: center;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-overlay">
+        <div class="admin-card">
+            <h2>Admin Authentication</h2>
+            <div class="form-group">
+                <label>Enter Password</label>
+                <input type="password" id="admin-pass" placeholder="••••••••">
+            </div>
+            <button onclick="checkPassword()">Login</button>
+        </div>
+    </div>
+
+    <div class="admin-card">
+        <h2>Configure Countdown Page</h2>
+        <p style="color: #8a8f98; font-size: 0.85rem; margin-bottom: 20px;">Timezone Target: <strong>Europe/Madrid</strong></p>
+        
+        <div class="form-group">
+            <label>Target Date & Time (Madrid Local Time)</label>
+            <input type="datetime-local" id="target-date">
+        </div>
+
+        <div class="form-group">
+            <label>Page Title</label>
+            <input type="text" id="page-title" placeholder="Something exciting is coming">
+        </div>
+
+        <div class="form-group">
+            <label>Page Subtitle</label>
+            <input type="text" id="page-subtitle" placeholder="We are working hard to bring you the next iteration...">
+        </div>
+
+        <button onclick="saveSettings()">Save Configuration</button>
+        <div class="alert" id="success-alert">Configuration updated successfully!</div>
+        <p style="text-align: center; margin-top: 15px;"><a href="../" style="color: #8a8f98; font-size: 0.85rem;">← View Countdown</a></p>
+    </div>
+
+    <script>
+        // PASS GATE: Replace "Madrid2026" with whatever password you prefer
+        function checkPassword() {
+            const pass = document.getElementById('admin-pass').value;
+            if (pass === "Madrid2026") {
+                document.getElementById('login-overlay').style.display = 'none';
+                loadCurrentSettings();
+            } else {
+                alert("Incorrect Password");
+            }
+        }
+
+        // Load existing configurations if they exist
+        function loadCurrentSettings() {
+            const savedDate = localStorage.getItem('countdown_date');
+            const savedTitle = localStorage.getItem('countdown_title');
+            const savedSubtitle = localStorage.getItem('countdown_subtitle');
+
+            if (savedDate) document.getElementById('target-date').value = savedDate;
+            if (savedTitle) document.getElementById('page-title').value = savedTitle;
+            if (savedSubtitle) document.getElementById('page-subtitle').value = savedSubtitle;
+        }
+
+        // Save inputs out to localStorage
+        function saveSettings() {
+            const dateValue = document.getElementById('target-date').value;
+            const titleValue = document.getElementById('page-title').value;
+            const subtitleValue = document.getElementById('page-subtitle').value;
+
+            if (!dateValue) {
+                alert("Please select a valid target date and time.");
+                return;
+            }
+
+            localStorage.setItem('countdown_date', dateValue);
+            localStorage.setItem('countdown_title', titleValue);
+            localStorage.setItem('countdown_subtitle', subtitleValue);
+
+            const alertBox = document.getElementById('success-alert');
+            alertBox.style.display = 'block';
+            setTimeout(() => { alertBox.style.display = 'none'; }, 3000);
+        }
+    </script>
+</body>
+</html>
