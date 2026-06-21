@@ -65,22 +65,29 @@
         if (CUSTOM_TITLE) document.getElementById('main-title').innerText = CUSTOM_TITLE;
         if (CUSTOM_SUBTITLE) document.getElementById('main-subtitle').innerText = CUSTOM_SUBTITLE;
 
-        function getTargetTimestamp() {
-            const formatter = new Intl.DateTimeFormat('en-US', {
-                timeZone: TIMEZONE, year: 'numeric', month: 'numeric', day: 'numeric',
-                hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false
-            });
-            const targetUtc = new Date(TARGET_DATE_STR + "Z").getTime();
-            const localParts = formatter.formatToParts(new Date(targetUtc));
-            const partMap = Object.fromEntries(localParts.map(p => [p.type, p.value]));
-            const localizedTarget = Date.UTC(
-                partMap.year, partMap.month - 1, partMap.day,
-                partMap.hour === "24" ? 0 : partMap.hour, partMap.minute, partMap.second
-            );
-            return targetUtc + (targetUtc - localizedTarget);
+        // Robust time-zone conversion helper
+        function getMadridTargetTimestamp(dateStr) {
+            // Create a pseudo-date using the input string
+            const parts = dateStr.split(/[-T:]/);
+            // Months are 0-indexed in JS Date constructor (January = 0)
+            const targetDate = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5] || 0);
+            
+            // Get the precise target date printed out in Madrid time
+            const madridString = targetDate.toLocaleString('en-US', { timeZone: TIMEZONE });
+            const madridDate = new Date(madridString);
+            
+            // Get the same target date printed out in your browser's local time
+            const localString = targetDate.toLocaleString('en-US');
+            const localDate = new Date(localString);
+            
+            // Find the offset gap between your local timezone and Madrid
+            const diffOffset = localDate.getTime() - madridDate.getTime();
+            
+            // Return the universal execution timestamp adjusted for Madrid
+            return targetDate.getTime() + diffOffset;
         }
 
-        const targetTime = getTargetTimestamp();
+        const targetTime = getMadridTargetTimestamp(TARGET_DATE_STR);
 
         function updateCountdown() {
             const now = new Date().getTime();
@@ -92,17 +99,20 @@
                 return;
             }
 
+            // High-precision mathematical distributions for standard intervals
             const days = Math.floor(difference / (1000 * 60 * 60 * 24));
             const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((difference % (1000 * 60)) / (1000 * 60));
+            const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
+            // Dynamically inject padded strings directly into the DOM
             document.getElementById("days").innerText = String(days).padStart(2, '0');
             document.getElementById("hours").innerText = String(hours).padStart(2, '0');
             document.getElementById("minutes").innerText = String(minutes).padStart(2, '0');
             document.getElementById("seconds").innerText = String(seconds).padStart(2, '0');
         }
 
+        // Engage loop execution engine immediately
         updateCountdown();
         const intervalId = setInterval(updateCountdown, 1000);
     </script>
