@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coming Soon</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0d0e12;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+        }
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -0.05em;
+        }
+        p.subtitle {
+            color: #8a8f98;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+        }
+        .countdown {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+        .time-box {
+            background: #16181d;
+            border: 1px solid #24262f;
+            border-radius: 12px;
+            padding: 15px;
+            min-width: 90px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        .number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            display: block;
+            color: #4f46e5; /* Accent color */
+        }
+        .label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #626770;
+            margin-top: 5px;
+            display: block;
+        }
+        @media (max-width: 480px) {
+            h1 { font-size: 2rem; }
+            .countdown { gap: 8px; }
+            .time-box { min-width: 75px; padding: 10px; }
+            .number { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Something exciting is coming</h1>
+        <p class="subtitle">We are working hard to bring you the next iteration. Stay tuned!</p>
+
+        <div class="countdown">
+            <div class="time-box"><span class="number" id="days">00</span><span class="label">Days</span></div>
+            <div class="time-box"><span class="number" id="hours">00</span><span class="label">Hours</span></div>
+            <div class="time-box"><span class="number" id="minutes">00</span><span class="label">Mins</span></div>
+            <div class="time-box"><span class="number" id="seconds">00</span><span class="label">Secs</span></div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        // Set your target date and time below in YYYY-MM-DDTHH:MM:SS format
+        const TARGET_DATE_STR = "2026-12-31T00:00:00"; 
+        const TIMEZONE = "Europe/Madrid";
+
+        // Convert the target date string in Madrid timezone to a universal timestamp
+        function getTargetTimestamp() {
+            const dateStrWithZone = `${TARGET_DATE_STR}`;
+            // Use Intl to find the timezone offset dynamically (handles Daylight Savings correctly)
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: TIMEZONE,
+                year: 'numeric', month: 'numeric', day: 'numeric',
+                hour: 'numeric', minute: 'numeric', second: 'numeric',
+                hour12: false
+            });
+            
+            // Generate a dummy target date and figure out how far off the user's local clock is from Madrid
+            const targetUtc = new Date(TARGET_DATE_STR + "Z").getTime();
+            const localParts = formatter.formatToParts(new Date(targetUtc));
+            const partMap = Object.fromEntries(localParts.map(p => [p.type, p.value]));
+            
+            const localizedTarget = Date.UTC(
+                partMap.year, partMap.month - 1, partMap.day,
+                partMap.hour === "24" ? 0 : partMap.hour, partMap.minute, partMap.second
+            );
+            
+            const offset = targetUtc - localizedTarget;
+            return targetUtc + offset;
+        }
+
+        const targetTime = getTargetTimestamp();
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const difference = targetTime - now;
+
+            if (difference <= 0) {
+                document.querySelector('.container').innerHTML = "<h1>We're Live!</h1><p class='subtitle'>Welcome to our new site.</p>";
+                clearInterval(intervalId);
+                return;
+            }
+
+            // Time calculations for days, hours, minutes and seconds
+            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((difference % (1000 * 60)) / (1000 * 60));
+
+            // Output the results, padding single digits with a leading zero
+            document.getElementById("days").innerText = String(days).padStart(2, '0');
+            document.getElementById("hours").innerText = String(hours).padStart(2, '0');
+            document.getElementById("minutes").innerText = String(minutes).padStart(2, '0');
+            document.getElementById("seconds").innerText = String(seconds).padStart(2, '0');
+        }
+
+        // Run immediately on load, then loop every second
+        updateCountdown();
+        const intervalId = setInterval(updateCountdown, 1000);
+    </script>
+</body>
+</html>
